@@ -16,9 +16,12 @@ class PostalCodeService extends ChangeNotifier {
     state: ''
   );
 
-  Future<void> searchPostalcode({required String postalCode}) async{
+  final List<Location> searchedList = [];
+
+  Future<void> searchPostalCode({required String postalCode}) async{
     try{
       state = LocationState.loading;
+
 
       notifyListeners();
 
@@ -33,10 +36,12 @@ class PostalCodeService extends ChangeNotifier {
       if(response.statusCode >= 400){
         state = LocationState.error;
       }
-      
+
       var fullAddress = jsonDecode(response.body);
-      
+
       lastLocationSearched = Location.fromJson(fullAddress);
+
+      searchedList.add(lastLocationSearched);
 
       state = LocationState.success;
 

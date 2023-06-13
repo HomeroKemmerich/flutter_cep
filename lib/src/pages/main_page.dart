@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cep/src/services/postal_code_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../components/location_card.dart';
+import '../components/app_message.dart';
+import 'history_page.dart';
 
 import 'package:provider/provider.dart';
 
@@ -18,6 +21,21 @@ class _MainPageState extends State<MainPage> {
   TextEditingController postalCodeInputController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+
+    final service = context.read<PostalCodeService>();
+    
+    service.addListener(() {
+      if(service.state == LocationState.success){
+        AppMessage(context, 'Sucesso', Colors.green);
+      } else if(service.state == LocationState.error){
+        AppMessage(context, 'Erro', Colors.red);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final service = Provider.of<PostalCodeService>(context);
 
@@ -25,6 +43,15 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         title: Text('CEP'),
         centerTitle: true,
+        actions: [
+          IconButton(onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const HistoryPage()
+              )
+            );
+          },  icon: Icon(Icons.history))
+        ],
       ),
       body: SingleChildScrollView(//Faz o scroll
         padding: const EdgeInsets.symmetric(
@@ -58,7 +85,7 @@ class _MainPageState extends State<MainPage> {
                     if(_formKey.currentState!.validate()){
                       _formKey.currentState!.save();
                       
-                      service.searchPostalcode(postalCode: postalCodeInputController.text);
+                      service.searchPostalCode(postalCode: postalCodeInputController.text);
                       postalCodeInputController.clear();
                     }
                   },
@@ -66,19 +93,20 @@ class _MainPageState extends State<MainPage> {
               const SizedBox(
                 height: 30,
               ),
+              LocationCard()
               //Quando houver um notifyListener, atualiza apenas o componente
-              Consumer<PostalCodeService>(
-                  builder: (context, postalcodeService, _){
-                    return Column(
-                      children: [
-                        Text('CEP: ${postalcodeService.lastLocationSearched.postalCode}'),
-                        Text('Logradouro: ${postalcodeService.lastLocationSearched.address}'),
-                        Text('Cidade: ${postalcodeService.lastLocationSearched.city}'),
-                        Text('Estado: ${postalcodeService.lastLocationSearched.state}')
-                      ],
-                    );
-                  }
-              ),
+              // Consumer<PostalCodeService>(
+              //     builder: (context, postalcodeService, _){
+              //       return Column(
+              //         children: [
+              //           Text('CEP: ${postalcodeService.lastLocationSearched.postalCode}'),
+              //           Text('Logradouro: ${postalcodeService.lastLocationSearched.address}'),
+              //           Text('Cidade: ${postalcodeService.lastLocationSearched.city}'),
+              //           Text('Estado: ${postalcodeService.lastLocationSearched.state}')
+              //         ],
+              //       );
+              //     }
+              // ),
 
             ],
           ),
